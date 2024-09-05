@@ -44,6 +44,8 @@ struct Options {
   size_t buf_size = 1 << 18;
   bool write_with_vmsplice = false;
   bool read_with_splice = false;
+  // Whether data should be updated using memset being being vmspliced or written.
+  bool touch = false;
   // Whether pages should be gifted (and then moved if with READ_WITH_SPLICE) to
   // vmsplice
   bool gift = false;
@@ -106,6 +108,7 @@ static void parse_options(int argc, char** argv, Options& options) {
     { "buf_size",             required_argument, 0, 0 },
     { "write_with_vmsplice",  no_argument,       0, 0 },
     { "read_with_splice",     no_argument,       0, 0 },
+    { "touch",                no_argument,       0, 0 },
     { "gift",                 no_argument,       0, 0 },
     { "bytes_to_pipe",        required_argument, 0, 0 },
     { "pipe_size",            required_argument, 0, 0 },
@@ -141,6 +144,7 @@ static void parse_options(int argc, char** argv, Options& options) {
       options.read_with_splice =
         options.read_with_splice || (strcmp("read_with_splice", option) == 0);
       verbose = verbose || (strcmp("verbose", option) == 0);
+      options.touch = options.touch || (strcmp("touch", option) == 0);
       options.gift = options.gift || (strcmp("gift", option) == 0);
       options.lock_memory = options.lock_memory || (strcmp("lock_memory", option) == 0);
       options.dont_touch_pages = options.dont_touch_pages || (strcmp("dont_touch_pages", option) == 0);
@@ -175,6 +179,7 @@ static void parse_options(int argc, char** argv, Options& options) {
   log("buf_size\t\t%zu\n", options.buf_size);
   log("write_with_vmsplice\t%s\n", bool_str(options.write_with_vmsplice));
   log("read_with_splice\t%s\n", bool_str(options.read_with_splice));
+  log("touch\t\t\t%s\n", bool_str(options.touch));
   log("gift\t\t\t%s\n", bool_str(options.gift));
   log("lock_memory\t\t%s\n", bool_str(options.lock_memory));
   log("dont_touch_pages\t%s\n", bool_str(options.dont_touch_pages));

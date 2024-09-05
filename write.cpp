@@ -10,9 +10,12 @@ static void with_write(const Options& options, char* buf) {
   struct pollfd pollfd;
   pollfd.fd = STDOUT_FILENO;
   pollfd.events = POLLOUT | POLLWRBAND;
-  while (true) {
+  for (size_t i = 0; ; i++) {
     char* cursor = buf;
     ssize_t remaining = options.buf_size;
+    if (options.touch) {
+      memset(cursor, (char) i, options.buf_size);
+    }
     while (remaining > 0) {
       if (options.poll && options.busy_loop) {
         while (poll(&pollfd, 1, 0) == 0) {}
@@ -49,11 +52,14 @@ static void with_vmsplice(const Options& options, char* bufs[2]) {
   // is ready to read. This simulates one possible measure when streaming
   // to a pipe with vmsplice.
   size_t buf_ix = 0;
-  while (true) {
+  for (size_t i = 0; ; i++) {
     struct iovec bufvec {
       .iov_base = bufs[buf_ix],
       .iov_len = options.buf_size
     };
+    if (options.touch) {
+      memset(bufs[buf_ix], (char) i, options.buf_size);
+    }
     buf_ix = (buf_ix + 1) % 2;
     while (bufvec.iov_len > 0) {
       if (options.poll && options.busy_loop) {
@@ -84,7 +90,6 @@ finished:
 
 int main(int argc, char** argv) {
   signal(SIGPIPE, SIG_IGN); // we terminate cleanly when the pipe is closed
-  perf_init();
 
   Options options;
   parse_options(argc, argv, options);
@@ -114,8 +119,6 @@ int main(int argc, char** argv) {
     }
   }
 
-  reset_perf_count();
-  enable_perf_count();
   if (options.write_with_vmsplice) {
     char* bufs[2];
     if (options.same_buffer) {
@@ -134,10 +137,6 @@ int main(int argc, char** argv) {
     log("starting to write\n");
     with_write(options, buf);
   }
-  disable_perf_count();
-  log_perf_count();
-
-  perf_close();
 
   return 0;
 }

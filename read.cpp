@@ -17,7 +17,7 @@ static size_t with_read(const Options& options, char* buf) {
     }
   }
   struct pollfd pollfd;
-  pollfd.fd = STDOUT_FILENO;
+  pollfd.fd = STDIN_FILENO;
   pollfd.events = POLLIN | POLLPRI;
   size_t read_count = 0;
   while (read_count < options.bytes_to_pipe) {
@@ -41,7 +41,7 @@ static size_t with_read(const Options& options, char* buf) {
 NOINLINE
 static size_t with_splice(const Options& options) {
   struct pollfd pollfd;
-  pollfd.fd = STDOUT_FILENO;
+  pollfd.fd = STDIN_FILENO;
   pollfd.events = POLLIN | POLLPRI;
   size_t read_count = 0;
   int devnull = open("/dev/null", O_WRONLY);
